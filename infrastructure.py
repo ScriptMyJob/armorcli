@@ -1,0 +1,26 @@
+#!/usr/bin/env python
+# Written by:   Robert J.
+#               Robert@scriptmyjob.com
+
+import os
+import requests
+import json
+
+#######################################
+##### Global Variables ################
+#######################################
+
+DEBUG   = os.environ.get('DEBUG', None)
+
+#######################################
+### Program Specific Functions ########
+#######################################
+
+def get_vm_list(baseurl, headers):
+    URL = baseurl + '/vms'
+    out = requests.get(URL, headers=headers)
+
+    if DEBUG:
+        print(json.dumps(out.json()))
+
+    return out.json()
