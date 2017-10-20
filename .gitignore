@@ -1,2 +1,3 @@
 /creds*
 /token_info.json
+/*.pyc

@@ -25,19 +25,19 @@ DEBUG       = None
 def main():
     token_file  = 'token_info.json'
     try:
-        token   = check_token(token_file)
+        token   = check_token_file(token_file)
     except Exception as exc:
         print(exc)
         token   = fetch_token()
 
-    return token
+    return baseurl, token
 
 
 #######################################
 ### Program Specific Functions ########
 #######################################
 
-def check_token(token_file):
+def check_token_file(token_file):
     if os.path.isfile(token_file):
         if DEBUG:
             print('Token file found...')
@@ -49,20 +49,25 @@ def check_token(token_file):
             datestr,
             '%Y-%m-%d %H:%M:%S'
         )
-        if exptime > datetime.now():
-            if DEBUG:
-                print("Token still valid until " + datestr)
-        else:
-            raise Exception['Token has expired']
+
+        check_token_time(exptime, datestr)
     else:
         raise Exception('Token file not found')
 
     return data['token']
 
 
+def check_token_time(exptime, datestr):
+    if exptime > datetime.now():
+        if DEBUG:
+            print("Token still valid until " + datestr)
+    else:
+        raise Exception['Token has expired']
+
+
 def fetch_token():
     auth_code   = get_info(
-        'Attempting to login (check your phone)...',
+        'Reauthenticating (check your phone)...',
         '/auth/authorize',
         'POST',
         'code',
