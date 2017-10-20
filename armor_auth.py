@@ -15,8 +15,8 @@ import json
 username    = creds.username()
 password    = creds.password()
 baseurl     = 'https://api.armor.com'
-DEBUG       = None
-# DEBUG       = True
+# DEBUG       = None
+DEBUG       = True
 
 #######################################
 ### Main Function #####################
