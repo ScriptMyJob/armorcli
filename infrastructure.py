@@ -21,6 +21,12 @@ def get_vm_list(baseurl, headers):
     out = requests.get(URL, headers=headers)
 
     if DEBUG:
-        print(json.dumps(out.json()))
+        print(
+            json.dumps(
+                out.json(),
+                indent=4,
+                sort_keys=True
+            )
+        )
 
     return out.json()

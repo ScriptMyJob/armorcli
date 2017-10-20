@@ -15,17 +15,16 @@ import json
 username    = creds.username()
 password    = creds.password()
 baseurl     = 'https://api.armor.com'
-# DEBUG       = None
-DEBUG       = True
+DEBUG       = os.environ.get('DEBUG', None)
+token_file  = 'token_info.json'
 
 #######################################
 ### Main Function #####################
 #######################################
 
 def main():
-    token_file  = 'token_info.json'
     try:
-        token   = check_token_file(token_file)
+        token   = check_token_file()
     except Exception as exc:
         print(exc)
         token   = fetch_token()
@@ -37,12 +36,14 @@ def main():
 ### Program Specific Functions ########
 #######################################
 
-def check_token_file(token_file):
+def check_token_file():
     if os.path.isfile(token_file):
         if DEBUG:
             print('Token file found...')
         with open(token_file) as token_json:
             data    = json.load(token_json)
+
+        token_json.close()
 
         datestr = data['expiration'].split(".")[0]
         exptime = datetime.strptime(
@@ -62,7 +63,7 @@ def check_token_time(exptime, datestr):
         if DEBUG:
             print("Token still valid until " + datestr)
     else:
-        raise Exception['Token has expired']
+        raise Exception('Token has expired')
 
 
 def fetch_token():
@@ -109,6 +110,8 @@ def fetch_token():
         ) + "\n"
     )
 
+    file.close()
+
     return token
 
 
@@ -117,8 +120,14 @@ def get_info(message, uri, action, parse=None, JSON=None):
 
     URL         = baseurl + uri
 
-    if DEBUG:
-        print(str(JSON))
+    if DEBUG and JSON:
+        print(
+            json.dumps(
+                JSON,
+                indent=4,
+                sort_keys=True
+            )
+        )
 
     if action   == 'POST':
         out         = requests.post(
