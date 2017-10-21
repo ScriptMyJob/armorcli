@@ -14,9 +14,12 @@ import json
 
 username    = creds.username()
 password    = creds.password()
+
 baseurl     = 'https://api.armor.com'
-DEBUG       = os.environ.get('DEBUG', None)
-token_file  = 'token_info.json'
+
+DEBUG       = os.environ.get('Debug', None)
+token_file  = os.environ.get('TokenFile', 'token_info.json')
+account_id  = os.environ.get('AccountId', 4464)
 
 #######################################
 ### Main Function #####################
@@ -29,7 +32,7 @@ def main():
         print(exc)
         token   = fetch_token()
 
-    return baseurl, token
+    return account_id, baseurl, token
 
 
 #######################################
@@ -40,37 +43,74 @@ def check_token_file():
     if os.path.isfile(token_file):
         if DEBUG:
             print('Token file found...')
-        with open(token_file) as token_json:
-            data    = json.load(token_json)
 
-        token_json.close()
+        data    = load_json_from_file(token_file)
 
         datestr = data['expiration'].split(".")[0]
         exptime = datetime.strptime(
             datestr,
             '%Y-%m-%d %H:%M:%S'
         )
-
-        check_token_time(exptime, datestr)
+        token   = data['token']
+        check_token_time(token, exptime, datestr)
     else:
         raise Exception('Token file not found')
 
-    return data['token']
+    return token
 
 
-def check_token_time(exptime, datestr):
+def load_json_from_file(filename):
+    with open(filename) as jsonfile:
+        jsondata = json.load(jsonfile)
+    jsonfile.close()
+
+    return jsondata
+
+
+def check_token_time(token, exptime, datestr):
     if exptime > datetime.now():
+        renew_token(token)
         if DEBUG:
             print("Token still valid until " + datestr)
     else:
         raise Exception('Token has expired')
 
 
+def renew_token(token):
+    URL     = baseurl + '/auth/token/reissue'
+    headers = {
+            "Accept": "application/json",
+            "Authorization": "FH-AUTH " + token,
+            "X-Account-Context": str(account_id)
+    }
+    payload = {
+        "token": token
+    }
+
+    if DEBUG:
+        print("\n" + 'Headers: ' + json.dumps(headers))
+        print("\n" + 'Payload: ' + json.dumps(payload))
+        print("\n" + 'Renewing Token')
+
+    out = requests.post(URL, data=payload, headers=headers)
+
+    if DEBUG and out.status_code == 200:
+        print('Token Renewed')
+    elif DEBUG:
+        print(str(out.status_code))
+        print(json.dumps(out.json()))
+
+    tlife = out.json()['expires_in']
+
+    exptime     = datetime.now() + timedelta(seconds=tlife)
+
+    write_toke_to_file(token, exptime)
+
+
 def fetch_token():
     auth_code   = get_info(
         'Reauthenticating (check your phone)...',
         '/auth/authorize',
-        'POST',
         'code',
         {
             "username": username,
@@ -79,9 +119,8 @@ def fetch_token():
     )
 
     token_json  = get_info(
-        'Retrieving Token...',
+        None,
         '/auth/token',
-        'POST',
         None,
         {
             "grant_type": "authorization_code",
@@ -96,6 +135,12 @@ def fetch_token():
 
     exptime     = datetime.now() + timedelta(seconds=tlife)
 
+    write_toke_to_file(token, exptime)
+
+    return token
+
+
+def write_toke_to_file(token, exptime):
     token_info  = {
         "token": token,
         "expiration": str(exptime)
@@ -112,13 +157,12 @@ def fetch_token():
 
     file.close()
 
-    return token
 
-
-def get_info(message, uri, action, parse=None, JSON=None):
-    print("\n" + message)
-
+def get_info(message, uri, parse=None, JSON=None):
     URL         = baseurl + uri
+
+    if message:
+        print("\n" + message)
 
     if DEBUG and JSON:
         print(
@@ -129,16 +173,10 @@ def get_info(message, uri, action, parse=None, JSON=None):
             )
         )
 
-    if action   == 'POST':
-        out         = requests.post(
-            URL,
-            data=JSON
-        )
-    elif action == 'GET':
-        out         = requests.get(
-            URL,
-            data=JSON
-        )
+    out         = requests.post(
+        URL,
+        data=JSON
+    )
 
     if out.status_code != 200:
         message = "Encountered an issue: " + \
@@ -154,7 +192,6 @@ def get_info(message, uri, action, parse=None, JSON=None):
 
     else:
         resp        = out.json()
-
         if DEBUG:
             print(
                 'Fetched JSON Information: ' +
@@ -169,7 +206,7 @@ def get_info(message, uri, action, parse=None, JSON=None):
 
 
 def die(message, code=1):
-    print(message)
+    print("\n" + message)
     sys.exit(code)
 
 

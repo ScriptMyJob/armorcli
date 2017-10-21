@@ -14,9 +14,8 @@ import os
 #######################################
 
 USAGE   = """
-Usage: armorcli
-
-armorcli (options) <command> <subcommand> [parameters]
+Usage:
+    armorcli (options) <command>
 
 Options:
     security            Display from under the Security Tab
@@ -24,14 +23,18 @@ Options:
     support             Display from under the Support Tab
     account             Display from under the Account Tab
 
+Commands:
+    infrastructure
+        list_vms
+
+
 Examples:
     armorcli infrastructure list_vms    # Returns a list of VMs
 """
 
-DEBUG   = os.environ.get('DEBUG', None)
+DEBUG   = os.environ.get('Debug', None)
 
-account_id  = 4464
-baseurl, token   = armor_auth.main()
+account_id, baseurl, token   = armor_auth.main()
 
 headers = {
     "Accept": "application/json",
@@ -69,15 +72,16 @@ def main():
 
     if sys.argv[1] == "infrastructure":
         if sys.argv[2] == "list_vms":
-            if DEBUG:
-                print('Retrieving VM List')
             out = infrastructure.get_vm_list(baseurl, headers)
+            if len(sys.argv) == 4:
+                out = [l[sys.argv[3]] for l in out]
+
             print(
                 json.dumps(out, indent=4, sort_keys=True)
             )
 
     if DEBUG:
-        print('Returning output')
+        print('Returned output')
 
     return out
 

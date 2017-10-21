@@ -10,7 +10,7 @@ import json
 ##### Global Variables ################
 #######################################
 
-DEBUG   = os.environ.get('DEBUG', None)
+DEBUG   = os.environ.get('Debug', None)
 
 #######################################
 ### Program Specific Functions ########
