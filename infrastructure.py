@@ -30,3 +30,19 @@ def get_vm_list(baseurl, headers):
         )
 
     return out.json()
+
+def get_app_list(baseurl, headers):
+    URL = baseurl + '/apps'
+    out = requests.get(URL, headers=headers)
+
+    if DEBUG:
+        print(
+            json.dumps(
+                out.json(),
+                indent=4,
+                sort_keys=True
+            )
+        )
+
+    return out.json()
+

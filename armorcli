@@ -15,7 +15,7 @@ import os
 
 USAGE   = """
 Usage:
-    armorcli (options) <command>
+    armorcli (options) <command> <subcommand>
 
 Options:
     security            Display from under the Security Tab
@@ -25,8 +25,31 @@ Options:
 
 Commands:
     infrastructure
-        list_vms
+        list_vms        Returns a list of VMs
+        list_apps       Returns a list of Workloads
 
+Subcommands:
+    list_vms
+        coreInstanceId  Returns a list of all core instance ids
+        cpu             Returns a list of CPU counts
+        dateCreated     Returns a list of creation dates
+        externalAddress Returns a list of Public IP addresses
+        ipAddress       Returns a list of Internal IP addresses
+        location        Returns a list of locations
+        memory          Returns a list of Memory Resources
+        name            Returns a list of VM Names
+        operatingSystem Returns a list of OSs
+        product         Returns a list of dicts for product info
+        tags            Returns a list of list of tags
+        vmId            Returns a list of VM IDs
+        workLoadName    Returns a list of Workloads (PODs)
+        zone            Returns a list of Zones
+    list_apps
+        id              Returns a list of Workload IDs
+        location        Returns a list of Workload locations
+        name            Returns a list of Workload names
+        vmCount         Returns a list of Workload VM Counts
+        zone            Returns a list of Workload vCenters
 
 Examples:
     armorcli infrastructure list_vms    # Returns a list of VMs
@@ -73,6 +96,16 @@ def main():
     if sys.argv[1] == "infrastructure":
         if sys.argv[2] == "list_vms":
             out = infrastructure.get_vm_list(baseurl, headers)
+            if len(sys.argv) == 4:
+                out = [l[sys.argv[3]] for l in out]
+
+            print(
+                json.dumps(out, indent=4, sort_keys=True)
+            )
+
+    if sys.argv[1] == "infrastructure":
+        if sys.argv[2] == "list_apps":
+            out = infrastructure.get_app_list(baseurl, headers)
             if len(sys.argv) == 4:
                 out = [l[sys.argv[3]] for l in out]
 
