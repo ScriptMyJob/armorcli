@@ -106,41 +106,45 @@ def main():
     if sys.argv[1] == "infrastructure":
         if sys.argv[2] == "list_vms":
             out = infrastructure.get_vm_list(baseurl, headers)
-            if len(sys.argv) == 4:
-                out = [l[sys.argv[3]] for l in out]
-
-            print(
-                json.dumps(out, indent=4, sort_keys=True)
-            )
+            print_out(out)
 
         if sys.argv[2] == "list_apps":
             out = infrastructure.get_app_list(baseurl, headers)
-            if len(sys.argv) == 4:
-                out = [l[sys.argv[3]] for l in out]
-
-            print(
-                json.dumps(out, indent=4, sort_keys=True)
-            )
+            print_out(out)
 
     if sys.argv[1] == "account":
         if sys.argv[2] == "user_info":
             out = account.get_user_info(baseurl, headers)
-            if len(sys.argv) == 4:
-                out = [l[sys.argv[3]] for l in out]
-
-            print(
-                json.dumps(out, indent=4, sort_keys=True)
-            )
+            print_out(out)
 
     if DEBUG:
         print('Returned output')
 
-    return out
+    try:
+        return out
+    except UnboundLocalError:
+        invalid()
 
 
 #######################################
 ### Program Specific Functions ########
 #######################################
+
+def print_out(out):
+    if len(sys.argv) == 4:
+        if isinstance(out, list):
+            out = [l[sys.argv[3]] for l in out]
+        else:
+            out = out[sys.argv[3]]
+
+    print(
+        json.dumps(
+            out,
+            indent=4,
+            sort_keys=True
+        )
+    )
+
 
 def syntax_check():
     if len(sys.argv) < 3:

@@ -17,25 +17,21 @@ DEBUG   = os.environ.get('Debug', None)
 #######################################
 
 def get_vm_list(baseurl, headers):
-    URL = baseurl + '/vms'
-    out = requests.get(URL, headers=headers)
+    out = get_request(baseurl, '/vms', headers)
+    return out
 
-    if DEBUG:
-        print(
-            json.dumps(
-                out.json(),
-                indent=4,
-                sort_keys=True
-            )
-        )
-
-    return out.json()
 
 def get_app_list(baseurl, headers):
-    URL = baseurl + '/apps'
+    out = get_request(baseurl, '/apps', headers)
+    return out
+
+
+def get_request(base, uri, headers):
+    URL = base + uri
     out = requests.get(URL, headers=headers)
 
     if DEBUG:
+        print(type(out))
         print(
             json.dumps(
                 out.json(),
@@ -45,4 +41,3 @@ def get_app_list(baseurl, headers):
         )
 
     return out.json()
-
