@@ -20,18 +20,35 @@ DEBUG   = os.environ.get('Debug', None)
 ### Program Specific Functions ########
 #######################################
 
-def get_vm_list(baseurl, headers):
-    out = get_request(baseurl, '/vms', headers)
+def get_armor_contacts(baseurl, headers):
+    out = get_request(baseurl, '/account/contacts', headers)
     return out
 
 
-def get_app_list(baseurl, headers):
-    out = get_request(baseurl, '/apps', headers)
+def get_user_info(baseurl, headers):
+    out = get_request(baseurl, '/me', headers)
     return out
 
 
-def get_request(base, uri, headers):
-    URL = base + uri
+def get_associated(baseurl, headers):
+    out = get_request(baseurl, '/accounts', headers)
+    return out
+
+
+def get_account_info(baseurl, headers, a_id):
+    out = get_request(baseurl, '/accounts', headers, "/" + str(a_id))
+    return out
+
+
+def get_request(base, uri, headers, uri2=None):
+    if uri2:
+        URL = base + uri + uri2
+    else:
+        URL = base + uri
+
+    if DEBUG:
+        print('Request URL: ' + URL)
+
     out = requests.get(URL, headers=headers)
 
     if DEBUG:
