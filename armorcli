@@ -3,8 +3,6 @@
 #               Robert@scriptmyjob.com
 
 import armor_auth
-import infrastructure
-import account
 
 import sys
 import json
@@ -14,83 +12,87 @@ import os
 ##### Global Variables ################
 #######################################
 
-USAGE   = """
-Usage:
-    armorcli (options) <command> <subcommand>
-
-Options:
-    security            Display from under the Security Tab
-    infrastructure      Display from under the Infrastructure Tab
-    support             Display from under the Support Tab
-    account             Display from under the Account Tab
-
-Commands:
-    infrastructure
-        list_vms        Returns a list of VMs
-        list_apps       Returns a list of Workloads
-    account
-        user_info       Returns information about the current user
-        armor_contacts  Returns a list of Armor contacts
-        association     Returns a list of associated accounts for the current user
-
-Subcommands:
-    infrastructure
-        list_vms
-            coreInstanceId      Returns a list of all core instance ids
-            cpu                 Returns a list of CPU counts
-            dateCreated         Returns a list of creation dates
-            externalAddress     Returns a list of Public IP addresses
-            ipAddress           Returns a list of Internal IP addresses
-            location            Returns a list of locations
-            memory              Returns a list of Memory Resources
-            name                Returns a list of VM Names
-            operatingSystem     Returns a list of OSs
-            product             Returns a list of dicts for product info
-            tags                Returns a list of list of tags
-            vmId                Returns a list of VM IDs
-            workLoadName        Returns a list of Workloads (PODs)
-            zone                Returns a list of Zones
-        list_apps
-            id                  Returns a list of Workload IDs
-            location            Returns a list of Workload locations
-            name                Returns a list of Workload names
-            vmCount             Returns a list of Workload VM Counts
-            zone                Returns a list of Workload vCenters
-    account
-        user_info
-            accounts            Returns accounts associated with the current user
-            features            Returns features associated with the current user
-            permissions         Returns permissions associated with the current user
-            user                Returns user info associated with the current user
-        armor_contacts
-            accountExecutive        Returns account "Executive"
-            accountStrategicManager Returns account "Strategic Manager"
-        association
-            id                  Returns a list of associated account ids
-            name                Returns a list of associated account names
-            products            Returns a list of dicts containing products
-            status              Returns a list of account statuses
-
-Examples:
-    armorcli infrastructure list_vms    # Returns a list of VMs
-"""
-
-DEBUG   = os.environ.get('Debug', None)
-
-account_id, baseurl, token   = armor_auth.main()
-
-headers = {
-    "Accept": "application/json",
-    "Authorization": "FH-AUTH " + token,
-    "X-Account-Context": str(account_id)
+arguments = {
+    "support": {
+        "_desc":                "Display from under the Support Tab",
+        "placehoder": {
+            "_desc":            "Placeholder",
+            "_function":        "Placeholder",
+            "subplaceholder":   "Placeholder"
+        }
+    },
+    "security": {
+        "_desc":                "Display from under the Security Tab",
+        "placehoder": {
+            "_desc":            "Placeholder",
+            "_function":        "Placeholder",
+            "subplaceholder":   "Placeholder"
+        }
+    },
+    "infrastructure": {
+        "_desc":                "Display from under the Infrastructure Tab",
+        "list_vms": {
+            "_desc":            "Returns a list of VMs",
+            "_function": "infrastructure.get_vm_list(baseurl, headers)",
+            "coreInstanceId":   "Returns a list of all core instance ids",
+            "cpu":              "Returns a list of CPU counts",
+            "dateCreated":      "Returns a list of creation dates",
+            "externalAddress":  "Returns a list of Public IP addresses",
+            "ipAddress":        "Returns a list of Internal IP addresses",
+            "location":         "Returns a list of locations",
+            "memory":           "Returns a list of Memory Resources",
+            "name":             "Returns a list of VM Names",
+            "operatingSystem":  "Returns a list of OSs",
+            "product":          "Returns a list of dicts for product info",
+            "tags":             "Returns a list of list of tags",
+            "vmId":             "Returns a list of VM IDs",
+            "workLoadName":     "Returns a list of Workloads (PODs)",
+            "zone":             "Returns a list of Zones"
+        },
+        "list_apps": {
+            "_desc":            "Returns a list of Workloads",
+            "_function": "infrastructure.get_app_list(baseurl, headers)",
+            "id":               "Returns a list of Workload IDs",
+            "location":         "Returns a list of Workload locations",
+            "name":             "Returns a list of Workload names",
+            "vmCount":          "Returns a list of Workload VM Counts",
+            "zone":             "Returns a list of Workload vCenters"
+        }
+    },
+    "account": {
+        "_desc":                "Display from under the Account Tab",
+        "user_info": {
+            "_desc":            "Returns information about the current user",
+            "_function": "account.get_user_info(baseurl, headers)",
+            "accounts":         "Returns accounts associated with the current user",
+            "features":         "Returns features associated with the current user",
+            "permissions":      "Returns permissions associated with the current user",
+            "user":             "Returns user info associated with the current user"
+        },
+        "armor_contacts": {
+            "_desc":                    "Returns a list of Armor contacts",
+            "_function":                "account.get_armor_contacts(baseurl, headers)",
+            "accountStrategicManager":  "Returns account 'Strategic Manager'",
+            "accountExecutive":         "Returns account 'Executive'"
+        },
+        "association": {
+            "_desc":        "Returns a list of associated accounts for the current user",
+            "_function":    "account.get_associated(baseurl, headers)",
+            "id":           "Returns a list of associated account ids",
+            "name":         "Returns a list of associated account names",
+            "products":     "Returns a list of dicts containing products",
+            "status":       "Returns a list of account statuses"
+        },
+        "info": {
+            "_desc":        "Returns information about the current account",
+            "_function":    "account.get_account_info(baseurl, headers, account_id)",
+            "accountId":    "Returns the current account id",
+            "name":         "Returns the current account name"
+        }
+    }
 }
 
-first_arg   = [
-    "security",
-    "infrastructure",
-    "support",
-    "account"
-]
+DEBUG   = os.environ.get('Debug', None)
 
 #######################################
 ### Main Function #####################
@@ -98,9 +100,17 @@ first_arg   = [
 
 def main():
     syntax_check()
+    account_id, baseurl, token = armor_auth.main()
+
+    headers = {
+        "Accept": "application/json",
+        "Authorization": "FH-AUTH " + token,
+        "X-Account-Context": str(account_id)
+    }
+
     debug("Headers: ", headers)
 
-    out = parse_args()
+    out = parse_args(account_id, baseurl, headers)
 
     debug('OUT -<< EOF')
     print_out(out)
@@ -128,31 +138,45 @@ def debug(message, variable=None):
             print("\n" + message)
 
 
-def parse_args():
-    if sys.argv[1] == "infrastructure":
-        if sys.argv[2] == "list_vms":
-            out = infrastructure.get_vm_list(baseurl, headers)
+def parse_args(account_id, baseurl, headers):
+    options = arguments.keys()
 
-        if sys.argv[2] == "list_apps":
-            out = infrastructure.get_app_list(baseurl, headers)
+    try:
+        option = sys.argv[1]
+        command = sys.argv[2]
+    except IndexError:
+        print('Invalid')
 
-    if sys.argv[1] == "account":
-        if sys.argv[2] == "user_info":
-            out = account.get_user_info(baseurl, headers)
+    if option in options:
+        commands = arguments[option].keys()
+        commands.remove('_desc')
+        if command in commands:
+            icommand = arguments[option][command]['_function']
 
-        if sys.argv[2] == "armor_contacts":
-            out = account.get_armor_contacts(baseurl, headers)
-
-        if sys.argv[2] == "association":
-            out = account.get_associated(baseurl, headers)
-
-        if sys.argv[2] == "info":
-            out = account.get_account_info(baseurl, headers, account_id)
+    out = compile_and_exec(icommand, account_id, baseurl, headers)
 
     try:
         return out
     except UnboundLocalError:
         invalid()
+
+
+def compile_and_exec(icommand, account_id, baseurl, headers):
+    code = compile(
+        'import infrastructure;' +
+        'import account;' +
+        'account_id = "' + str(account_id) + '";' +
+        'baseurl = "' + baseurl + '";' +
+        'headers = ' + str(headers) + ';' +
+        'out = ' + icommand,
+        '<string>',
+        'exec'
+    )
+
+    ns = {}
+    exec(code) in ns
+
+    return ns['out']
 
 
 def print_out(out):
@@ -176,15 +200,73 @@ def syntax_check():
 
     if len(sys.argv) < 3:
         invalid(1)
-    if sys.argv[1] not in first_arg:
+    if sys.argv[1] not in arguments.keys():
         invalid(2)
 
     debug("Passed dummy check.")
 
 
 def invalid(code=255):
-    print("Invalid syntax: \n" + USAGE + "\n")
+    print("Invalid syntax: \n")
+    print_help()
     sys.exit(code)
+
+
+def print_help():
+    script = __file__
+    options = arguments.keys()
+
+    header('Useage')
+
+    main_args = arguments.keys()
+    print(script + "[options] [command] <subcommand>")
+
+    header('Options')
+    for m in sorted(options):
+        print(
+            '{:4}'.format(' ') +
+            '{:<15}'.format(m) +
+            '{:6}'.format(' ') +
+            arguments[m]["_desc"]
+        )
+
+    header('Commands')
+    for m in sorted(options):
+        print("{:4}".format(' ') + m)
+        commands = arguments[m].keys()
+        commands.remove('_desc')
+
+        for c in sorted(commands):
+            print(
+                '{:8}'.format(' ') +
+                '{:<15}'.format(c) +
+                '{:2}'.format(' ') +
+                arguments[m][c]['_desc']
+            )
+
+    header('Subcommands')
+    for m in sorted(main_args):
+        print("{:4}".format(' ') + m)
+        commands = arguments[m].keys()
+        commands.remove('_desc')
+
+        for c in sorted(commands):
+            print('{:8}'.format(' ') + c)
+            subcommands = arguments[m][c].keys()
+            subcommands.remove('_desc')
+            subcommands.remove('_function')
+
+            for s in sorted(subcommands):
+                print(
+                    '{:12}'.format(' ') +
+                    '{:<15}'.format(s) +
+                    '{:2}'.format(' ') +
+                    arguments[m][c][s]
+                )
+
+def header(message):
+    print("\n" + message + ":")
+
 
 #######################################
 ##### Execution #######################
