@@ -15,10 +15,21 @@ import os
 arguments = {
     "support": {
         "_desc":                "Display from under the Support Tab",
-        "placehoder": {
-            "_desc":            "Placeholder",
-            "_function":        "Placeholder",
-            "subplaceholder":   "Placeholder"
+        "create_ticket": {
+            "_desc":            "Opens a support ticket",
+            "_function":        "support.open_ticket(baseurl, headers, ticket_title, first_comment)",
+            "ticket_tile":      "This is required for the creation of a ticket (see below for example)",
+            "first_comment":    "This is also required for the creation of a ticket (see below for example)",
+        },
+        "get_tickets": {
+            "_desc":            "Returns a list of user tickets",
+            "_function":        "support.get_tickets(baseurl, headers)",
+            "ticketsList":      "Returns list of tickets only."
+        },
+        "get_ticket_count": {
+            "_desc":            "Returns a count of tickets that the user has ",
+            "_function":        "support.get_ticket_count(baseurl, headers)",
+            "N/A":              "There is no subcommand for this argument"
         }
     },
     "security": {
@@ -162,16 +173,32 @@ def parse_args(account_id, baseurl, headers):
 
 
 def compile_and_exec(icommand, account_id, baseurl, headers):
-    code = compile(
-        'import infrastructure;' +
-        'import account;' +
-        'account_id = "' + str(account_id) + '";' +
-        'baseurl = "' + baseurl + '";' +
-        'headers = ' + str(headers) + ';' +
-        'out = ' + icommand,
-        '<string>',
-        'exec'
-    )
+    if sys.argv[2] == 'create_ticket':
+        code = compile(
+            'import infrastructure;' +
+            'import account;' +
+            'import support;' +
+            'account_id = "' + str(account_id) + '";' +
+            'baseurl = "' + baseurl + '";' +
+            'headers = ' + str(headers) + ';' +
+            'ticket_title = "' + sys.argv[3] + '";' +
+            'first_comment = "' + sys.argv[4] + '";' +
+            'out = ' + icommand,
+            '<string>',
+            'exec'
+        )
+    else:
+        code = compile(
+            'import infrastructure;' +
+            'import account;' +
+            'import support;' +
+            'account_id = "' + str(account_id) + '";' +
+            'baseurl = "' + baseurl + '";' +
+            'headers = ' + str(headers) + ';' +
+            'out = ' + icommand,
+            '<string>',
+            'exec'
+        )
 
     ns = {}
     exec(code) in ns
@@ -207,19 +234,19 @@ def syntax_check():
 
 
 def invalid(code=255):
-    print("Invalid syntax: \n")
+    print("Invalid syntax:")
     print_help()
     sys.exit(code)
 
 
 def print_help():
-    script = __file__
+    script = __file__.split('/')[-1]
     options = arguments.keys()
 
     header('Useage')
 
     main_args = arguments.keys()
-    print(script + "[options] [command] <subcommand>")
+    print(script + " [options] [command] <subcommand>")
 
     header('Options')
     for m in sorted(options):
@@ -265,7 +292,7 @@ def print_help():
                 )
 
 def header(message):
-    print("\n" + message + ":")
+    print("\n" + message + ":" + "\n" + '-' * (len(message) + 1))
 
 
 #######################################
