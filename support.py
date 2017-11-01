@@ -30,7 +30,7 @@ def get_ticket_count(baseurl, headers):
     return out
 
 
-def open_ticket(baseurl, headers, title, first_comment):
+def open_ticket(baseurl, headers, title):
     data = {
         "starred": False,
         "type": "ticket",
@@ -39,9 +39,7 @@ def open_ticket(baseurl, headers, title, first_comment):
         "tags": [
             "Created via Armor API"
         ],
-        "comments": [
-            first_comment
-        ],
+        "comments": [],
         "recipients": [],
         "relatedServers": [],
         "relatedTickets": []
@@ -51,10 +49,39 @@ def open_ticket(baseurl, headers, title, first_comment):
     return out
 
 
+def post_comment(baseurl, headers, ticket_number, comment):
+    uri2 = '/' + ticket_number + '/comment'
+    data = {
+        "comment": comment,
+        "files": []
+    }
+
+    out = post_request(baseurl, '/tickets', headers, data=data, uri2=uri2)
+    return out
+
+
+def reopen_ticket(baseurl, headers, ticket_number):
+    uri2 = '/' + ticket_number + '/open'
+
+    out = post_request(baseurl, '/tickets', headers, uri2=uri2)
+    return out
+
+
+def close_ticket(baseurl, headers, ticket_number):
+    uri2 = '/' + ticket_number + '/close'
+
+    out = post_request(baseurl, '/tickets', headers, uri2=uri2)
+    return out
+
+
 def get_account_info(baseurl, headers, a_id):
     out = get_request(baseurl, '/accounts', headers, "/" + str(a_id))
     return out
 
+
+#######################################
+### Generic Functions #################
+#######################################
 
 def get_request(base, uri, headers, uri2=None):
     if uri2:

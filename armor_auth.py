@@ -18,7 +18,8 @@ password    = creds.password()
 baseurl     = 'https://api.armor.com'
 
 DEBUG       = os.environ.get('Debug', None)
-token_file  = os.environ.get('TokenFile', 'token_info.json')
+file_path   = os.path.dirname(__file__)
+token_file  = os.environ.get('TokenFile',  file_path + '/' + 'token_info.json')
 account_id  = os.environ.get('AccountId', 4464)
 
 #######################################
@@ -28,7 +29,10 @@ account_id  = os.environ.get('AccountId', 4464)
 def main():
     try:
         token   = check_token_file()
-    except Exception as exc:
+    except TokenExpired as exc:
+        print(exc)
+        token   = fetch_token()
+    except TokenRejected as exc:
         print(exc)
         token   = fetch_token()
 
@@ -45,6 +49,9 @@ def check_token_file():
             print('Token file found...')
 
         data    = load_json_from_file(token_file)
+
+        if DEBUG:
+            print('Token File Contents: ' + json.dumps(data, indent=4))
 
         datestr = data['expiration'].split(".")[0]
         exptime = datetime.strptime(
@@ -69,11 +76,11 @@ def load_json_from_file(filename):
 
 def check_token_time(token, exptime, datestr):
     if exptime > datetime.now():
-        renew_token(token)
         if DEBUG:
             print("Token still valid until " + datestr)
+        renew_token(token)
     else:
-        raise Exception('Token has expired')
+        raise TokenExpired('Token has expired')
 
 
 def renew_token(token):
@@ -100,11 +107,12 @@ def renew_token(token):
         print(str(out.status_code))
         print(json.dumps(out.json()))
 
-    tlife = out.json()['expires_in']
-
-    exptime     = datetime.now() + timedelta(seconds=tlife)
-
-    write_toke_to_file(token, exptime)
+    if out.status_code == 200:
+        tlife = out.json()['expires_in']
+        exptime     = datetime.now() + timedelta(seconds=tlife)
+        write_toke_to_file(token, exptime)
+    else:
+        raise TokenRejected('Armor has rejected the token.')
 
 
 def fetch_token():
@@ -208,6 +216,14 @@ def get_info(message, uri, parse=None, JSON=None):
 def die(message, code=1):
     print("\n" + message)
     sys.exit(code)
+
+
+class TokenRejected(Exception):
+    pass
+
+
+class TokenExpired(Exception):
+    pass
 
 
 #######################################
